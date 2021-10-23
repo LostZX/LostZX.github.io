@@ -17,10 +17,11 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="theme-color" content="#f8f8f8">
-  <title>LostZX</title>
+  <title>fastjson-3 - LostZX</title>
 
   
-  <meta name="description" content="">
+  <meta name="description" content="关于fastjson的第三篇胡言乱语
+fastjson 1.2.24 反序列化">
 
   <!-- feed -->
   
@@ -41,36 +42,79 @@
 
 
   <div class='l_body' id='start'>
-    <aside class='l_left' layout='page'>
+    <aside class='l_left' layout='post'>
     
 
 
 <header class="header">
 
 <div class="logo-wrap"><a class="avatar" href="/about/"><div class="bg" style="opacity:0;background-image:url(https://cdn.jsdelivr.net/gh/cdn-x/placeholder@1.0.2/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="https://ding-images.oss-cn-hangzhou.aliyuncs.com/images/38459891.jpg" onerror="javascript:this.classList.add('error');this.src='https://cdn.jsdelivr.net/gh/cdn-x/placeholder@1.0.1/image/2659360.svg';"></a><a class="title" href="/"><div class="main">LostZX</div></a></div>
-<nav class="menu dis-select"><a class="nav-item" href="/">博客</a><a class="nav-item" href="/notes/">杂记</a><a class="nav-item" href="/more/">更多</a></nav></header>
+<nav class="menu dis-select"><a class="nav-item active" href="/">博客</a><a class="nav-item" href="/notes/">杂记</a><a class="nav-item" href="/more/">更多</a></nav></header>
 
 <div class="widgets">
 
+<div class="widget-wrap single" id="toc"><div class="widget-header cap dis-select"><span class="name">本文目录</span></div><div class="widget-body fs14"><div class="doc-tree active"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Fastjson%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E5%88%86%E6%9E%90"><span class="toc-text">Fastjson反序列化分析</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E9%93%BE%E6%8E%A5"><span class="toc-text">参考链接</span></a></li></ol></div></div></div>
 
-<div class="widget-wrap" id="recent"><div class="widget-header cap dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><div class="line"></div><a class="more-item" href="/2021/10/20/fastjson_3/"><div class="cap"><time>2021-10-23</time></div><span class="title">fastjson-3</span></a><div class="line"></div><a class="more-item" href="/2021/10/12/fastjson_1/"><div class="cap"><time>2021-10-19</time></div><span class="title">fastjson-1</span></a><div class="line"></div><a class="more-item" href="/2021/10/17/fastjson_2/"><div class="cap"><time>2021-10-19</time></div><span class="title">fastjson-2</span></a></div></div>
 
 </div>
 
 
     </aside>
-    <div class='l_main list'>
+    <div class='l_main'>
       
-  
-
-<header class="header mobile-only">
-
-<div class="logo-wrap"><a class="avatar" href="/about/"><div class="bg" style="opacity:0;background-image:url(https://cdn.jsdelivr.net/gh/cdn-x/placeholder@1.0.2/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="https://ding-images.oss-cn-hangzhou.aliyuncs.com/images/38459891.jpg" onerror="javascript:this.classList.add('error');this.src='https://cdn.jsdelivr.net/gh/cdn-x/placeholder@1.0.1/image/2659360.svg';"></a><a class="title" href="/"><div class="main">LostZX</div></a></div>
-</header>
-
-
 
       
+
+
+<div class="bread-nav fs12"><div id="breadcrumb"><a class="cap breadcrumb" href="/">LostZX</a><span class="sep"></span><a class="cap breadcrumb" href="/">文章</a></div><div id="post-meta">发布于&nbsp;<time datetime="2021-10-20T01:25:26.613Z">2021-10-20</time></div></div>
+
+<article class='content md post'>
+<h1 class="article-title"><span>fastjson-3</span></h1>
+<p>关于fastjson的第三篇胡言乱语</p>
+<p>fastjson 1.2.24 反序列化</p>
+<span id="more"></span>
+
+<h1 id="Fastjson学他妈的"><a href="#Fastjson学他妈的" class="headerlink" title="Fastjson学他妈的"></a>Fastjson学他妈的</h1><p>很简单的东西要看好几遍，真是菜啊。</p>
+<p>像我这样的傻逼，就得多学几遍</p>
+<h2 id="Fastjson反序列化分析"><a href="#Fastjson反序列化分析" class="headerlink" title="Fastjson反序列化分析"></a>Fastjson反序列化分析</h2><p>写个bean，刚开始分析的时候最好写个bean，如果直接拿payload去分析，会有很多干扰函数，要跟蛮久的。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://ding-images.oss-cn-hangzhou.aliyuncs.com/images/20211020102031.png"></p>
+<p>当解析使用的是<code>JSON.parseObject(jsonStr)</code>时，会去调用getter和setter方法，其他两种只会调用getter方法</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://ding-images.oss-cn-hangzhou.aliyuncs.com/images/20211020102451.png"></p>
+<p>获取反序列化类之后，就会开始构造JavaBean，首先先调用无参构造方法，然后开始循环判断自身和所有父类的所有共有方法（public），如果符合一下5个条件，会被自动调用</p>
+<ol>
+<li>函数名长度 &gt;= 4  </li>
+<li>不是static方法</li>
+<li>返回值为void或当前类</li>
+<li>参数是1个</li>
+<li>以set开头</li>
+</ol>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://ding-images.oss-cn-hangzhou.aliyuncs.com/images/20211022151743.png"></p>
+<p>然后往下判断如果从上面截取了属性名，但是获取不到就会去判断is方法，再往下就是调用setter方法了，fastjson使用ASM动态生成了字节码，继承了<code>JavaBeanDeserializer</code>（恢复字节码可以在ASM生成code后打断点写入文件，在堆栈里可以看到调用了<code>deserialze</code>方法，这里去看<code>com.alibaba.fastjson.parser.deserializer.JavaBeanDeserializer#deserialze</code>方法，这里直接贴调用堆栈把，也不多，最终会进入invoke调用setter方法。<br><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://ding-images.oss-cn-hangzhou.aliyuncs.com/images/20211023145628.png"></p>
+<p>getter方法就比较简单了，直接看下堆栈</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://ding-images.oss-cn-hangzhou.aliyuncs.com/images/20211023154202.png"></p>
+<p>自动调用getter需要满足如下几个条件</p>
+<ol>
+<li>方法名长度不小于4</li>
+<li>不能是静态方法</li>
+<li>方法名要get开头同时第四个字符串要大写</li>
+<li>方法返回的类型必须继承自Collection Map AtomicBoolean AtomicInteger AtomicLong</li>
+<li>传入的参数个数需要为0</li>
+</ol>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://ding-images.oss-cn-hangzhou.aliyuncs.com/images/20211023154550.png"></p>
+<p>最后，整个调用逻辑</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://ding-images.oss-cn-hangzhou.aliyuncs.com/images/20211023163619.png"></p>
+<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><p><a target="_blank" rel="noopener" href="https://blog.0kami.cn/2020/04/13/java/talk-about-fastjson-deserialization">https://blog.0kami.cn/2020/04/13/java/talk-about-fastjson-deserialization</a><br><a target="_blank" rel="noopener" href="https://su18.org/post/fastjson/">https://su18.org/post/fastjson/</a><br><a target="_blank" rel="noopener" href="https://y4er.com/post/fastjson-learn/">https://y4er.com/post/fastjson-learn/</a><br><a target="_blank" rel="noopener" href="https://paper.seebug.org/994/">https://paper.seebug.org/994/</a></p>
+
+
+<div class="article-footer reveal fs14"><section id="license"><div class="header"><span>许可协议</span></div><div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div></section></div>
+
+</article>
+
+<div class="related-wrap reveal" id="read-next"><section class="header cap theme"><span>接下来阅读</span></section><section class="body fs14"><a id="next" href="/2021/10/17/fastjson_2/">fastjson-2<span class="note">较早</span></a><div class="line"></div><div class="line"></div><a id="more" href="/archives">检索全部文章</a></section></div>
+
+
+
 
 
 
