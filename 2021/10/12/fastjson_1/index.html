@@ -21,7 +21,7 @@
 
   
   <meta name="description" content="关于fastjson的第一篇胡言乱语
-1.2.24 &lt; fastjson &lt;= 1.2.47 分析利用">
+1.2.24 &lt; fastjson &lt;= 1.2.68 分析利用">
 
   <!-- feed -->
   
@@ -53,7 +53,7 @@
 
 <div class="widgets">
 
-<div class="widget-wrap single" id="toc"><div class="widget-header cap dis-select"><span class="name">本文目录</span></div><div class="widget-body fs14"><div class="doc-tree active"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-2-24-lt-fastjson-lt-1-2-25"><span class="toc-text">1.2.24 &lt; fastjson &lt;&#x3D; 1.2.25</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-2-25-lt-fastjson-lt-1-2-42"><span class="toc-text">1.2.25 &lt; fastjson &lt;&#x3D; 1.2.42</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-2-42-lt-fastjson-lt-1-2-43"><span class="toc-text">1.2.42 &lt; fastjson &lt;&#x3D; 1.2.43</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#fastjson-lt-1-2-47"><span class="toc-text">fastjson &lt;&#x3D; 1.2.47</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol></div></div></div>
+<div class="widget-wrap single" id="toc"><div class="widget-header cap dis-select"><span class="name">本文目录</span></div><div class="widget-body fs14"><div class="doc-tree active"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-2-24-lt-fastjson-lt-1-2-25"><span class="toc-text">1.2.24 &lt; fastjson &lt;&#x3D; 1.2.25</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-2-25-lt-fastjson-lt-1-2-42"><span class="toc-text">1.2.25 &lt; fastjson &lt;&#x3D; 1.2.42</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-2-42-lt-fastjson-lt-1-2-43"><span class="toc-text">1.2.42 &lt; fastjson &lt;&#x3D; 1.2.43</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#fastjson-lt-1-2-47"><span class="toc-text">fastjson &lt;&#x3D; 1.2.47</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Fastjson-lt-1-2-68"><span class="toc-text">Fastjson &lt;&#x3D; 1.2.68</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol></div></div></div>
 
 
 </div>
@@ -71,13 +71,15 @@
 <article class='content md post'>
 <h1 class="article-title"><span>fastjson-1</span></h1>
 <p>关于fastjson的第一篇胡言乱语</p>
-<p>1.2.24 &lt; fastjson &lt;= 1.2.47 分析利用</p>
+<p>1.2.24 &lt; fastjson &lt;= 1.2.68 分析利用</p>
 <span id="more"></span>
 
 
 
 <h1 id="Fastjson学他妈的"><a href="#Fastjson学他妈的" class="headerlink" title="Fastjson学他妈的"></a>Fastjson学他妈的</h1><p>最近时间比较多,想把别人都会的学一下,至少看起来不那么菜…</p>
 <p>心态崩了,oss上的图片被覆盖掉了,截图都重新截了,可能忽略了当时思考的一些东西,裂开了</p>
+<p>写这篇文章的时候是先跟了好几遍调用流程，前几个版本的有些问题也渐渐清晰了，但是又多了一些问题，得反复思考，这样这篇只能当作一个笔记去翻看，并不是一篇很好的文章</p>
+<p>就是看得太少，想的太少，做的太少，总结一下，怎么这么菜啊。</p>
 <h2 id="1-2-24-lt-fastjson-lt-1-2-25"><a href="#1-2-24-lt-fastjson-lt-1-2-25" class="headerlink" title="1.2.24 &lt; fastjson &lt;= 1.2.25"></a>1.2.24 &lt; fastjson &lt;= 1.2.25</h2><p>开启autoTypeSupport</p>
 <p>引入了黑白名单的判断,如果开启了autoTypeSupport,或指定了期望类,那么就先进行白名单匹配,如果没匹配到,再进行黑名单匹配,这里注意判断是否在黑白名单中的方式是<code>startsWith</code></p>
 <p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://ding-images.oss-cn-hangzhou.aliyuncs.com/images/carbon(3).png"></p>
@@ -111,9 +113,17 @@
 <p>接下来fastjson会去将<code>@type</code>指定的类进行反序列化,通过预设的一个<code>IdentityHashMap</code>中去取,这里指定了<code>@type</code>为class类,在<code>PaserConfig</code>中的<code>initDeserializers</code>方法中初始化预设了很多类,其中<code>class</code>类就是用<code>MiscCodec</code>类去解析</p>
 <p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://ding-images.oss-cn-hangzhou.aliyuncs.com/images/20211019170234.png"></p>
 <p>这个绕过分析最好自己重新跟一遍,这里因为中间很多事情一直在打断,断断续续写了三四天,中间忘记保存了两次,而且图床把我图片覆盖了，所以可能图不对文，不过大概的执行顺序图片上都标注了，应该还算清晰吧，如果实在不能理解，可以参考<a target="_blank" rel="noopener" href="https://su18.org/post/fastjson/#8-fastjson-1268">素18师傅</a>的和<a target="_blank" rel="noopener" href="https://lalajun.github.io/2019/12/30/java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96-fastjson/">这位师傅</a>的文章，抱拳了。</p>
+<h2 id="Fastjson-lt-1-2-68"><a href="#Fastjson-lt-1-2-68" class="headerlink" title="Fastjson &lt;= 1.2.68"></a>Fastjson &lt;= 1.2.68</h2><p>fastjson对类的反序列化，是通过<code>com.alibaba.fastjson.parser.ParserConfig#getDeserializers</code>来获取的，比如其中一种绕过，利用的是异常类，就会获取到<code>ThrowableDeserializer</code>对象，对一些没有预设的类，会获取到<code>JavaBeanDeserializer</code>一般的绕过类型都是这个类。</p>
+<p>按照浅蓝师傅的思路，需要使用期望类来绕过，这里期望类默认为null，需要找到一个地方预设了期望类，搜索checkAutoType在<code>JavaBeanDeserializer</code>中调用的地方，最后找到两处<br><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://ding-images.oss-cn-hangzhou.aliyuncs.com/images/20211017174044.png"></p>
+<p>分别是<code>deserialzeArrayMapping</code>和<code>deserialze</code>方法，其中<code>deserialze</code>已经相当熟悉了，指定<code>@type</code>反序列化的时候就会调用到这个位置，直接拿payload跟一下<br>在<code>JavaBeanDeserializer</code>构建javabean，然后继续会走到<code>deserialze</code>，省略中间一些步骤</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://ding-images.oss-cn-hangzhou.aliyuncs.com/images/carbon.png"></p>
+<p>这样就重新设置了期望类，最终调用如下</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://ding-images.oss-cn-hangzhou.aliyuncs.com/images/carbon(1).png"></p>
+<p>最后还进行了一次判断，判断了autoType不能是几个高风险类型的子类、并且必须是期望类的子类，这里就使得1.2.68的利用非常困难，不过还是有大师傅研究了比较稳定的利用方法</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://ding-images.oss-cn-hangzhou.aliyuncs.com/images/carbon(2).png"></p>
 <h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>对fastjson的绕过大概有个概念了,知道怎么打,payload为什么这样写,原理是什么</p>
 <p>虽然有些地方还看的不是太懂,但至少还是去跟了,后面慢慢来吧。</p>
-<p>关于1.2.68绕过,我想后面跟任意文件写入一起分析,趁着这段时间多学一点东西吧。</p>
+<p>抱拳了</p>
 
 
 <div class="article-footer reveal fs14"><section id="license"><div class="header"><span>许可协议</span></div><div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
